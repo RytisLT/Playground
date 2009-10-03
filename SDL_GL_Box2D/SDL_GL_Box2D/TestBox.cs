@@ -94,9 +94,22 @@ namespace SDL_GL_Box2D
             result.CreatePhysics(world, positionX, positionY);
             return result;  
         }
+
+        public bool HitTest(double x, double y)
+        {
+            var rectangle = new RectangleF(this.Position.X, this.Position.Y, this.Width, this.Height);
+            return rectangle.IntersectsWith(new RectangleF((float)x, (float)y, 1, 1));            
+        }
     }
 
     internal interface IWorldObject
     {
+        bool HitTest(double x, double y);
+
+        System.Drawing.Color Color
+        {
+            get;
+            set;
+        }
     }
 }

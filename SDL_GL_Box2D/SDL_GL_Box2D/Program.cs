@@ -13,7 +13,7 @@ namespace SDL_GL_Box2D
     using SdlDotNet.Input;
 
     using Tao.OpenGl;
-
+    
     class Program
     {
         private const int Width = 800;
@@ -24,12 +24,19 @@ namespace SDL_GL_Box2D
 
         private float quadRotation;
 
-        private List<IWorldObject> objects = new List<IWorldObject>();
-        
+        private List<IWorldObject> worldObjects = new List<IWorldObject>();
+
+        private Random random = new Random();
 
         private Surface screen;
 
         private World world;
+
+        private double mouseZ;
+
+        private double mouseY;
+
+        private double mouseX;
 
         /// <summary>
         /// The main entry point for the application.
@@ -59,27 +66,9 @@ namespace SDL_GL_Box2D
         private void InitBox2D()
         {
             var aabb = new AABB();
-            aabb.LowerBound = new Vec2(-100, -100);
-            aabb.UpperBound = new Vec2(100, 100);
-            this.world = new World(aabb, new Vec2(0, -10), true);
-            var groudBodyDef = new BodyDef();
-            
-            
-            groudBodyDef.Position.Set(0, 10);
-            var groundBody = world.CreateBody(groudBodyDef);
-            var groundShapeDef = new PolygonDef();
-            groundShapeDef.SetAsBox(50, 10);
-            groundBody.CreateShape(groundShapeDef);
-
-           /* var bodyDef = new BodyDef();
-            bodyDef.Position.Set(0, 4);
-            var body = world.CreateBody(bodyDef);
-            var shapeDef = new PolygonDef();
-            shapeDef.SetAsBox(1, 1);
-            shapeDef.Density = 1;
-            shapeDef.Friction = 0.3f;
-            body.CreateShape(shapeDef);
-            body.SetMassFromShapes();*/
+            aabb.LowerBound = new Vec2(-200, -200);
+            aabb.UpperBound = new Vec2(200, 200);
+            this.world = new World(aabb, new Vec2(0, -10), true);                       
         }
 
         private void Reshape()
@@ -109,8 +98,8 @@ namespace SDL_GL_Box2D
         {            
            Gl.glLoadIdentity();
               Gl.glTranslatef(box.Position.X, box.Position.Y, -6f);
-              float step = 1 / 255f;
-              Gl.glColor3f(step * box.Color.R, step * box.Color.G, step * box.Color.B);
+              float ratio = 1 / 255f;
+              Gl.glColor3f(ratio * box.Color.R, ratio * box.Color.G, ratio * box.Color.B);
               Gl.glRotatef(box.Rotation, 0.0f, 0.0f, 1.0f);
               Gl.glBegin(Gl.GL_QUADS);
               Gl.glVertex3f(-box.Width, box.Height, 0.0f);
@@ -124,22 +113,14 @@ namespace SDL_GL_Box2D
         {
             Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
             Gl.glLoadIdentity();
-            
-            /*Gl.glTranslatef(-1.5f, 0, -6);
-            Gl.glRotatef(this.triangleRotation, 0.0f, 1.0f, 0.0f);
-            Gl.glBegin(Gl.GL_TRIANGLES);
-            Gl.glColor3f(1.0f, 0.0f, 0.0f);
-            Gl.glVertex3f(0, 1, 0);
-            Gl.glColor3f(0.0f, 1.0f, 0.0f);
-            Gl.glVertex3f(-1, -1, 0);
-            Gl.glColor3f(0.0f, 0.0f, 1.0f);
-            Gl.glVertex3f(1, -1, 0);
-            Gl.glEnd();*/
-
-            foreach (var worldObject in objects)
+                     
+            foreach (var worldObject in this.worldObjects)
             {
                 Draw(worldObject);
-            }           
+            } 
+           
+            
+            
         }
 
         private void Initialize()
@@ -148,7 +129,8 @@ namespace SDL_GL_Box2D
             Events.KeyboardDown += this.Events_KeyboardDown;
             Events.Tick += this.Events_Tick;
             Events.Quit += this.Events_Quit;
-            Events.Fps = 50;
+            Events.MouseMotion += this.Events_MouseMotion;
+            Events.Fps = 60;
             this.SetWindowAttributes();
             this.screen = Video.SetVideoMode(Width, Height, true, true);
 
@@ -156,25 +138,61 @@ namespace SDL_GL_Box2D
 
             var ground = TestBox.Create(this.world, 0.0f, -2f, 3f, 0.1f, 0);
             ground.Color = System.Drawing.Color.Olive;
-            this.objects.Add(ground);
+            this.worldObjects.Add(ground);
 
 
 
-            float size = 0.3f;
-            int levels = 3;
+            float size = 0.15f;
+            int levels = 6;
             float startX = -2f;
-            float startY = -0.5f;
+            float startY = -1.7f;
             for (int i = levels; i > 0; --i)
             {                
                 for (int j = 0; j < i; j++)
                 {
-                    var x = startX + j * size + 0.1f;
-                    var y = startY - i * size + 0.1f;
+                    var x = startX + j * size * 2.1f ;
+                    var y = startY + (levels - i) * size * 2;
                     var box = TestBox.Create(this.world, x, y, size, size, 1);
-                    objects.Add(box);
-                }
+                    box.Color = System.Drawing.Color.FromArgb(random.Next(255), random.Next(255), random.Next(255));
+                    this.worldObjects.Add(box);
+                }                
             }
             
+        }
+
+        void Events_MouseMotion(object sender, MouseMotionEventArgs e)
+        {
+            double[] modelviewMatrix = new double[16];
+            double[] projectionMatrix = new double[16];
+            int[] viewport = new int[4];
+
+            Gl.glGetDoublev(Gl.GL_MODELVIEW_MATRIX, modelviewMatrix);
+            Gl.glGetDoublev(Gl.GL_PROJECTION_MATRIX, projectionMatrix);
+            Gl.glGetIntegerv(Gl.GL_VIEWPORT, viewport);
+            
+            Glu.gluUnProject(e.X, Video.Screen.Height - e.Y, 0.1, modelviewMatrix, projectionMatrix, viewport,
+                out mouseX, out mouseY, out mouseZ);
+
+            float[] near = new[] { (float)mouseX, (float)mouseY, (float)mouseZ };
+
+            Glu.gluUnProject(e.X, Video.Screen.Height - e.Y, 1000, modelviewMatrix, projectionMatrix, viewport,
+                out mouseX, out mouseY, out mouseZ);
+
+            float[] far = new[] { (float)mouseX, (float)mouseY, (float)mouseZ };
+
+            float t = (float)((near[2] - this.mouseZ) / (near[2] - far[2]));
+
+            float x = near[0] + (far[0] - near[0]) * t;
+            float y = near[1] + (far[1] - near[1]) * t;
+
+            foreach (var worldObject in this.worldObjects)
+            {                                                            
+
+                if (worldObject.HitTest(mouseX, mouseY))
+                {
+                    worldObject.Color = System.Drawing.Color.Red;
+                }
+            }
         }
 
         private void SetWindowAttributes()
@@ -204,6 +222,12 @@ namespace SDL_GL_Box2D
             if (e.Key == Key.Escape || e.Key == Key.Q)
             {
                 Events.QuitApplication();
+            }
+            if (e.Key == Key.A)
+            {
+                var box = TestBox.Create(this.world, (float)this.mouseX, (float)this.mouseY, 0.1f, 0.1f, 1f);
+                box.Color = System.Drawing.Color.FromArgb(random.Next(255), random.Next(255), random.Next(255));
+                this.worldObjects.Add(box);
             }
         }
 
