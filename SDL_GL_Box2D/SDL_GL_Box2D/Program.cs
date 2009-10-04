@@ -24,19 +24,17 @@ namespace SDL_GL_Box2D
 
         private float quadRotation;
 
-        private List<IWorldObject> worldObjects = new List<IWorldObject>();
+        private readonly List<IWorldObject> worldObjects = new List<IWorldObject>();
 
-        private Random random = new Random();
+        private readonly Random random = new Random();
 
         private Surface screen;
 
         private World world;
 
-        private double mouseZ;
+        private Vec3 mousePos;
 
-        private double mouseY;
-
-        private double mouseX;
+        private Vec2 windowMousePos;
 
         /// <summary>
         /// The main entry point for the application.
@@ -92,6 +90,10 @@ namespace SDL_GL_Box2D
                 this.Draw((TestBox)worldObject);
                 
             }
+            else if (worldObject is Biped)
+            {
+                this.Draw((Biped)worldObject);
+            }
         }
         
         private void Draw(TestBox box)
@@ -99,14 +101,36 @@ namespace SDL_GL_Box2D
            Gl.glLoadIdentity();
               Gl.glTranslatef(box.Position.X, box.Position.Y, -6f);
               float ratio = 1 / 255f;
-              Gl.glColor3f(ratio * box.Color.R, ratio * box.Color.G, ratio * box.Color.B);
-              Gl.glRotatef(box.Rotation, 0.0f, 0.0f, 1.0f);
+            var color = box.Color;
+            if (box.IsHot)
+            {
+                color = System.Drawing.Color.Red;
+            }
+            Gl.glColor3f(ratio * color.R, ratio * color.G, ratio * color.B);
+            
+            Gl.glRotatef(box.Rotation, 0.0f, 0.0f, 1.0f);
               Gl.glBegin(Gl.GL_QUADS);
-              Gl.glVertex3f(-box.Width, box.Height, 0.0f);
-              Gl.glVertex3f(box.Width, box.Height, 0.0f);
-              Gl.glVertex3f(box.Width, -box.Height, 0.0f);
-              Gl.glVertex3f(-box.Width, -box.Height, 0.0f);
+              var z = 0.0f;
+              Gl.glVertex3f(-box.Width, box.Height, z);
+              Gl.glVertex3f(box.Width, box.Height, z);
+              Gl.glVertex3f(box.Width, -box.Height, z);
+              Gl.glVertex3f(-box.Width, -box.Height, z);
             Gl.glEnd();
+        }
+
+        private void Draw(Biped biped)
+        {
+            var shape = biped.Chest.GetShapeList();
+            if (shape is PolygonShape)
+            {
+                var polygon = (PolygonShape)shape;
+                Gl.glBegin(Gl.GL_POLYGON);
+                foreach(var nomal in polygon.Normals)
+                {
+                    Gl.glVertex3f(nomal.X, nomal.Y, 0.0f);                    
+                }
+                Gl.glEnd();
+            }
         }
 
         private void DrawScene()
@@ -117,10 +141,10 @@ namespace SDL_GL_Box2D
             foreach (var worldObject in this.worldObjects)
             {
                 Draw(worldObject);
-            } 
-           
-            
-            
+            }
+
+
+            Gl.glFlush();
         }
 
         private void Initialize()
@@ -143,7 +167,7 @@ namespace SDL_GL_Box2D
 
 
             float size = 0.15f;
-            int levels = 6;
+            int levels = 8;
             float startX = -2f;
             float startY = -1.7f;
             for (int i = levels; i > 0; --i)
@@ -162,35 +186,19 @@ namespace SDL_GL_Box2D
 
         void Events_MouseMotion(object sender, MouseMotionEventArgs e)
         {
-            double[] modelviewMatrix = new double[16];
-            double[] projectionMatrix = new double[16];
-            int[] viewport = new int[4];
+            this.windowMousePos = new Vec2(e.X, e.Y);
+           
+            this.mousePos = Helper.GetOGLPos(e.X, e.Y);
+            var foo = Helper.Foo(e.X, e.Y);
 
-            Gl.glGetDoublev(Gl.GL_MODELVIEW_MATRIX, modelviewMatrix);
-            Gl.glGetDoublev(Gl.GL_PROJECTION_MATRIX, projectionMatrix);
-            Gl.glGetIntegerv(Gl.GL_VIEWPORT, viewport);
-            
-            Glu.gluUnProject(e.X, Video.Screen.Height - e.Y, 0.1, modelviewMatrix, projectionMatrix, viewport,
-                out mouseX, out mouseY, out mouseZ);
-
-            float[] near = new[] { (float)mouseX, (float)mouseY, (float)mouseZ };
-
-            Glu.gluUnProject(e.X, Video.Screen.Height - e.Y, 1000, modelviewMatrix, projectionMatrix, viewport,
-                out mouseX, out mouseY, out mouseZ);
-
-            float[] far = new[] { (float)mouseX, (float)mouseY, (float)mouseZ };
-
-            float t = (float)((near[2] - this.mouseZ) / (near[2] - far[2]));
-
-            float x = near[0] + (far[0] - near[0]) * t;
-            float y = near[1] + (far[1] - near[1]) * t;
+            Gl.glMatrixMode(Gl.GL_MODELVIEW);
+            Gl.glLoadIdentity();	
 
             foreach (var worldObject in this.worldObjects)
-            {                                                            
-
-                if (worldObject.HitTest(mouseX, mouseY))
+            {
+                if (worldObject.HitTest(this.mousePos.X, this.mousePos.Y))
                 {
-                    worldObject.Color = System.Drawing.Color.Red;
+                    break;
                 }
             }
         }
@@ -225,9 +233,14 @@ namespace SDL_GL_Box2D
             }
             if (e.Key == Key.A)
             {
-                var box = TestBox.Create(this.world, (float)this.mouseX, (float)this.mouseY, 0.1f, 0.1f, 1f);
+                var box = TestBox.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.1f, 0.1f, 1f);
                 box.Color = System.Drawing.Color.FromArgb(random.Next(255), random.Next(255), random.Next(255));
                 this.worldObjects.Add(box);
+            }
+            else if (e.Key == Key.B)
+            {
+                var biped = new Biped(this.world, new Vec2(this.mousePos.X, this.mousePos.Y));
+                this.worldObjects.Add(biped);
             }
         }
 

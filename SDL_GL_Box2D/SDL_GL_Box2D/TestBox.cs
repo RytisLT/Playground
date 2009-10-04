@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace SDL_GL_Box2D
@@ -16,6 +15,12 @@ namespace SDL_GL_Box2D
         const float ratio = 100;
 
         private Body body;
+
+        public bool IsHot
+        {
+            get;
+            private set;
+        }
 
         public Vec2 Position
         {
@@ -98,7 +103,8 @@ namespace SDL_GL_Box2D
         public bool HitTest(double x, double y)
         {
             var rectangle = new RectangleF(this.Position.X, this.Position.Y, this.Width, this.Height);
-            return rectangle.IntersectsWith(new RectangleF((float)x, (float)y, 1, 1));            
+            IsHot = rectangle.IntersectsWith(new RectangleF((float)x, (float)y, 1, 1));
+            return IsHot;
         }
     }
 
