@@ -87,52 +87,67 @@ namespace SDL_GL_Box2D
         {
             if (worldObject is TestBox)
             {
-                this.Draw((TestBox)worldObject);
-                
-            }
-            else if (worldObject is Biped)
+                this.Draw((TestBox)worldObject);                
+            }          
+            else if (worldObject is Circle)
             {
-                this.Draw((Biped)worldObject);
-            }
+                this.Draw((Circle)worldObject);
+            }        
         }
-        
+
+        private void Draw(Circle circle)
+        {
+            Gl.glLoadIdentity();
+            var x = circle.Position.X;
+            var y = circle.Position.Y;
+            Gl.glTranslatef(x, y, -6f);
+            Gl.glRotatef(circle.Rotation, 0.0f, 0.0f, 1.0f);
+            Gl.glTranslatef(-x, -y, 6f);
+            this.SetGlColor(circle.Color);            
+            Gl.glBegin(Gl.GL_TRIANGLE_FAN);
+            var radius = circle.Radius*0.5F;
+            for (int i = 0; i < 360; i += 5)
+            {
+                var rads = Helper.DegreesToRad(i);                
+                Gl.glVertex3f((float)(x + System.Math.Sin(rads) * radius), (float)(y + System.Math.Cos(rads) * radius), -6.0f);
+            }
+            Gl.glEnd();
+
+            this.SetGlColor(circle.RadiusColor);
+            Gl.glBegin(Gl.GL_LINES);
+            Gl.glVertex3f(x , y , -6.0f);
+            Gl.glVertex3f(x + radius, y, -6.0f);
+            Gl.glEnd();
+        }
+
         private void Draw(TestBox box)
-        {            
-           Gl.glLoadIdentity();
-              Gl.glTranslatef(box.Position.X, box.Position.Y, -6f);
-              float ratio = 1 / 255f;
+        {
+            Gl.glLoadIdentity();
+            Gl.glTranslatef(box.Position.X, box.Position.Y, -6f);
+
             var color = box.Color;
             if (box.IsHot)
             {
                 color = System.Drawing.Color.Red;
             }
-            Gl.glColor3f(ratio * color.R, ratio * color.G, ratio * color.B);
-            
+            this.SetGlColor(color);
+
             Gl.glRotatef(box.Rotation, 0.0f, 0.0f, 1.0f);
-              Gl.glBegin(Gl.GL_QUADS);
-              var z = 0.0f;
-              Gl.glVertex3f(-box.Width, box.Height, z);
-              Gl.glVertex3f(box.Width, box.Height, z);
-              Gl.glVertex3f(box.Width, -box.Height, z);
-              Gl.glVertex3f(-box.Width, -box.Height, z);
+            Gl.glBegin(Gl.GL_QUADS);
+            var z = 0.0f;
+            Gl.glVertex3f(-box.Width, box.Height, z);
+            Gl.glVertex3f(box.Width, box.Height, z);
+            Gl.glVertex3f(box.Width, -box.Height, z);
+            Gl.glVertex3f(-box.Width, -box.Height, z);
             Gl.glEnd();
         }
 
-        private void Draw(Biped biped)
+        private void SetGlColor (System.Drawing.Color color)
         {
-            var shape = biped.Chest.GetShapeList();
-            if (shape is PolygonShape)
-            {
-                var polygon = (PolygonShape)shape;
-                Gl.glBegin(Gl.GL_POLYGON);
-                foreach(var nomal in polygon.Normals)
-                {
-                    Gl.glVertex3f(nomal.X, nomal.Y, 0.0f);                    
-                }
-                Gl.glEnd();
-            }
+            float ratio = 1 / 255f;                        
+            Gl.glColor3f(ratio * color.R, ratio * color.G, ratio * color.B);
         }
-
+        
         private void DrawScene()
         {
             Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
@@ -177,7 +192,7 @@ namespace SDL_GL_Box2D
                     var x = startX + j * size * 2.1f ;
                     var y = startY + (levels - i) * size * 2;
                     var box = TestBox.Create(this.world, x, y, size, size, 1);
-                    box.Color = System.Drawing.Color.FromArgb(random.Next(255), random.Next(255), random.Next(255));
+                    box.Color = Helper.GetRandomColor();
                     this.worldObjects.Add(box);
                 }                
             }
@@ -234,13 +249,14 @@ namespace SDL_GL_Box2D
             if (e.Key == Key.A)
             {
                 var box = TestBox.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.1f, 0.1f, 1f);
-                box.Color = System.Drawing.Color.FromArgb(random.Next(255), random.Next(255), random.Next(255));
+                box.Color = Helper.GetRandomColor();
                 this.worldObjects.Add(box);
             }
-            else if (e.Key == Key.B)
+            else if (e.Key == Key.C)
             {
-                var biped = new Biped(this.world, new Vec2(this.mousePos.X, this.mousePos.Y));
-                this.worldObjects.Add(biped);
+                var circle = Circle.Create(world, this.mousePos.X, this.mousePos.Y, 0.3f, 1.0f);
+                circle.Color = Helper.GetRandomColor();
+                this.worldObjects.Add(circle);
             }
         }
 

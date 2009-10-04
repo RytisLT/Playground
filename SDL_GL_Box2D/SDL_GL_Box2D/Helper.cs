@@ -4,6 +4,7 @@ using System.Text;
 
 namespace SDL_GL_Box2D
 {
+    using System.Drawing;
     using System.Runtime.InteropServices;
 
     using Box2DX.Common;
@@ -14,6 +15,8 @@ namespace SDL_GL_Box2D
 
     class Helper
     {
+        private static readonly Random Random = new Random();
+
         public static Vec2 ConvertScreenToWorld(int x, int y)
         {
             var width = (float)Video.Screen.Width;
@@ -85,6 +88,11 @@ namespace SDL_GL_Box2D
             var ration = 0.0165f;
             var result = new Vec3((float)posX / ration, (float)posY / ration, (float)posZ / ration);
             return result;
+        }
+
+        public static Color GetRandomColor()
+        {
+            return Color.FromArgb(Random.Next(255), Random.Next(255), Random.Next(255));
         }
 
         public static Vec3 Foo(int x, int y)
