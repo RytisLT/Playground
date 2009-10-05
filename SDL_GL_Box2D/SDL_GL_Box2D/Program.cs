@@ -92,7 +92,11 @@ namespace SDL_GL_Box2D
             else if (worldObject is Circle)
             {
                 this.Draw((Circle)worldObject);
-            }        
+            } 
+            else if (worldObject is Car)
+            {
+                this.Draw((Car)worldObject);
+            }
         }
 
         private void Draw(Circle circle)
@@ -135,11 +139,20 @@ namespace SDL_GL_Box2D
             Gl.glRotatef(box.Rotation, 0.0f, 0.0f, 1.0f);
             Gl.glBegin(Gl.GL_QUADS);
             var z = 0.0f;
-            Gl.glVertex3f(-box.Width, box.Height, z);
-            Gl.glVertex3f(box.Width, box.Height, z);
-            Gl.glVertex3f(box.Width, -box.Height, z);
-            Gl.glVertex3f(-box.Width, -box.Height, z);
+            var width = box.Width;
+            var height = box.Height;
+            Gl.glVertex3f(-width, height, z);
+            Gl.glVertex3f(width, height, z);
+            Gl.glVertex3f(width, -height, z);
+            Gl.glVertex3f(-width, -height, z);
             Gl.glEnd();
+        }
+
+        private void Draw(Car car)
+        {
+            Draw(car.CarBody);
+            Draw(car.FrontWheel);
+            Draw(car.BackWheel);
         }
 
         private void SetGlColor (System.Drawing.Color color)
@@ -257,6 +270,11 @@ namespace SDL_GL_Box2D
                 var circle = Circle.Create(world, this.mousePos.X, this.mousePos.Y, 0.3f, 1.0f);
                 circle.Color = Helper.GetRandomColor();
                 this.worldObjects.Add(circle);
+            }
+            else if (e.Key == Key.R)
+            {
+                var car = Car.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.4f, 0.3f);
+                this.worldObjects.Add(car);
             }
         }
 

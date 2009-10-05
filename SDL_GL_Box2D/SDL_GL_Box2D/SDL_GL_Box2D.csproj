@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Biped.cs" />
     <Compile Include="BipedDef.cs" />
+    <Compile Include="Car.cs" />
     <Compile Include="Circle.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Program.cs" />

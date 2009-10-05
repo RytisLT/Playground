@@ -5,6 +5,10 @@ namespace SDL_GL_Box2D
 
     internal abstract class WorldObject : IWorldObject
     {
+        protected WorldObject()
+        {
+        }
+
         protected Body body;
 
         public Vec2 Position
@@ -43,6 +47,14 @@ namespace SDL_GL_Box2D
         {
             get;
             set;
+        }
+
+        public Body Body
+        {
+            get
+            {
+                return this.body;
+            }            
         }
 
         protected abstract void CreatePhysics(World world, float positionX, float positionY);
