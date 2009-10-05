@@ -102,13 +102,24 @@ namespace SDL_GL_Box2D
             float wheelDensity = 0.4f;
 
             car.CarBody = TestBox.Create(world, positionX, positionY, car.Width, bodyHeight, bodyDensity);
-            car.FrontWheel = Circle.Create(world, positionX - car.Width + wheelRadius, positionY - car.CarBody.Height, wheelRadius, wheelDensity);
-            car.BackWheel = Circle.Create(world, positionX + car.Width - wheelRadius, positionY - car.CarBody.Height, wheelRadius, wheelDensity);
+            car.FrontWheel = Circle.Create(world, positionX - car.Width  + wheelRadius /2.0f, positionY - car.CarBody.Height, wheelRadius, wheelDensity);
+            car.BackWheel = Circle.Create(world, positionX + car.Width  - wheelRadius / 2.0f, positionY - car.CarBody.Height, wheelRadius, wheelDensity);
 
             car.BodyColor = Helper.GetRandomColor();
             car.WheelsColor = Helper.GetRandomColor();
             car.CreatePhysics(world,positionX, positionY);
             return car;
         }
+
+        public void Accelerate()
+        {
+            this.FrontWheel.Body.ApplyTorque(1.0f);
+        }
+
+        public void Deccelerate()
+        {
+            this.FrontWheel.Body.ApplyTorque(-1.0f);
+        }
     }
+
 }

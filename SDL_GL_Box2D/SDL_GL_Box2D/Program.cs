@@ -36,6 +36,8 @@ namespace SDL_GL_Box2D
 
         private Vec2 windowMousePos;
 
+        private Car lastCar;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -255,26 +257,40 @@ namespace SDL_GL_Box2D
 
         void Events_KeyboardDown(object sender, KeyboardEventArgs e)
         {
-            if (e.Key == Key.Escape || e.Key == Key.Q)
+            switch (e.Key)
             {
-                Events.QuitApplication();
-            }
-            if (e.Key == Key.A)
-            {
-                var box = TestBox.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.1f, 0.1f, 1f);
-                box.Color = Helper.GetRandomColor();
-                this.worldObjects.Add(box);
-            }
-            else if (e.Key == Key.C)
-            {
-                var circle = Circle.Create(world, this.mousePos.X, this.mousePos.Y, 0.3f, 1.0f);
-                circle.Color = Helper.GetRandomColor();
-                this.worldObjects.Add(circle);
-            }
-            else if (e.Key == Key.R)
-            {
-                var car = Car.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.4f, 0.3f);
-                this.worldObjects.Add(car);
+                case Key.Escape:
+                case Key.Q:
+                    Events.QuitApplication();
+                    break;
+                case Key.A:
+                    var box = TestBox.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.1f, 0.1f, 1f);
+                    box.Color = Helper.GetRandomColor();
+                    this.worldObjects.Add(box);
+                    break;
+                case Key.C:
+                    var circle = Circle.Create(world, this.mousePos.X, this.mousePos.Y, 0.3f, 1.0f);
+                    circle.Color = Helper.GetRandomColor();
+                    this.worldObjects.Add(circle);
+
+                    break;
+                case Key.R:
+                    var car = Car.Create(this.world, this.mousePos.X, this.mousePos.Y, 0.4f, 0.3f);
+                    this.worldObjects.Add(car);
+                    this.lastCar = car;
+                    break;
+                case Key.LeftArrow:
+                    if (this.lastCar != null)
+                    {
+                        this.lastCar.Accelerate();
+                    }
+                    break;
+                case Key.RightArrow:
+                    if (this.lastCar != null)
+                    {
+                        this.lastCar.Deccelerate();
+                    }
+                    break;
             }
         }
 
