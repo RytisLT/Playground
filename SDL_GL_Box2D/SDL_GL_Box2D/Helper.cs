@@ -82,8 +82,8 @@ namespace SDL_GL_Box2D
             posY = nearY - farY;
             posZ = nearZ - farY;
 
-            Console.WriteLine(
-                    "X:Y {0}:{1} posX:posY:posZ {2}:{3}:{4}", x, y, posX, posY, posZ);
+/*            Console.WriteLine(
+                    "X:Y {0}:{1} posX:posY:posZ {2}:{3}:{4}", x, y, posX, posY, posZ);*/
 
             var ration = 0.0165f;
             var result = new Vec3((float)posX / ration, (float)posY / ration, (float)posZ / ration);
@@ -97,28 +97,21 @@ namespace SDL_GL_Box2D
 
         public static Vec3 Foo(int x, int y)
         {
-            double Output_X, Output_Y, Output_Z;
+            double outX, outY, outZ;
 
-            double[] ModelviewMatrix = new double[16];
-            double[] ProjectionMatrix = new double[16];
-            int[] Viewport = new int[4];
-            float[] Pixels = new float[1];
+            double[] modelviewMatrix = new double[16];
+            double[] projectionMatrix = new double[16];
+            int[] viewport = new int[4];
+            float[] pixels = new float[1];
+            
+            Gl.glGetDoublev(Gl.GL_MODELVIEW_MATRIX, modelviewMatrix);
+            Gl.glGetDoublev(Gl.GL_PROJECTION_MATRIX, projectionMatrix);
+            Gl.glGetIntegerv(Gl.GL_VIEWPORT, viewport);
 
-            IntPtr PixelPtr = Marshal.AllocHGlobal(sizeof(float));
+            Gl.glReadPixels(x, viewport[3] - y, 1, 1, Gl.GL_DEPTH_COMPONENT, Gl.GL_FLOAT, pixels);
 
-            Gl.glGetDoublev(Gl.GL_MODELVIEW_MATRIX, ModelviewMatrix);
-            Gl.glGetDoublev(Gl.GL_PROJECTION_MATRIX, ProjectionMatrix);
-            Gl.glGetIntegerv(Gl.GL_VIEWPORT, Viewport);
-
-            Marshal.Copy(Pixels, 0, PixelPtr, 1);
-
-            Gl.glReadPixels(x, Viewport[3] - y, 1, 1, Gl.GL_DEPTH_COMPONENT, Gl.GL_FLOAT, PixelPtr);
-
-            Marshal.Copy(PixelPtr, Pixels, 0, 1);
-            Marshal.FreeHGlobal(PixelPtr);
-
-            Glu.gluUnProject(x, Viewport[3] - y, Pixels[0], ModelviewMatrix, ProjectionMatrix, Viewport, out Output_X, out Output_Y, out Output_Z);
-            return new Vec3((float)Output_X, (float)Output_Y, (float)Output_Z);
+            Glu.gluUnProject(x, viewport[3] - y, pixels[0], modelviewMatrix, projectionMatrix, viewport, out outX, out outY, out outZ);
+            return new Vec3((float)outX, (float)outY, (float)outZ);
 
         }
 

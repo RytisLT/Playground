@@ -60,7 +60,9 @@
     <Compile Include="BipedDef.cs" />
     <Compile Include="Car.cs" />
     <Compile Include="Circle.cs" />
+    <Compile Include="ComplexWorldObject.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="IWorldObject.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -82,8 +84,8 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="TestBox.cs" />
-    <Compile Include="WorldObject.cs" />
+    <Compile Include="Box.cs" />
+    <Compile Include="BasicWorldObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
